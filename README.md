@@ -18,3 +18,35 @@ ERP is fun! Check out Steven Luck's ERPLAB Git in your free time!
  CNV: contingent negative variation 
 
  PINV: post imperative negative variation
+ 
+ 
+ERP Machine Use
+Measure the head in centimeters from brows to occipital bones and measure over the ears 
+Select the cap with the tag that corresponds to the measurement
+Apply stickers to the back of the red and blue electrode collars
+use the chart to attach electrode cables to the cap (do not apply GRND until step 28)
+use Qtip to apply gel to the back of the subject's neck 
+wipe with alcohol prep pad and paper towel 
+use Qtip to apply gel to the left and right mastoids
+wipe with alcohol prep pad and paper towel
+use Qtip to apply nuprep gel below the left eye 
+apply gel to left and right mastoid 
+wipe with alcohol prep pad and paper towel
+Plug electrodes into the impedance meter and turn on the impedance meter
+blue and/or red gets plugged into the +/-
+green is always neutral
+peel back the sticker on the red electrode and place on the back of the skull (base of neck) to the left or right of the spinal cord 
+repeat for blue electrode on the other side of the base of the neck to the left or right of the spinal cord
+press the white button on the impedance meter to turn it on
+Place the corresponding electrodes from the white cap electrodes onto the left and right horizontal eye and below the left eye  
+fill a syringe with gel
+stir gel into each electrode using the back of a Qtip
+use the green electrode on the impedance meter to ensure that every electrode reads a ch of under 50 kilo ohms 
+when reading the red and blue electrodes, place the meter next to and slightly below the electrodes using the green electrode, do not place on top
+place on top for the white ones
+place cap on the head (tag in the back)
+fill the electrodes with gel and stir the inside of the electrrodes with a qtip
+measure with impedance meter to make sure the ch reads below 50 kilo ohms 
+place the GRND electrode in 
+remove the red and blue electrodes from the back of the neck
+ask subject to bring the box with them as they move into the testing chamber
