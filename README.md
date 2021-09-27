@@ -5,7 +5,9 @@ ERP is fun! Check out Steven Luck's ERPLAB Git in your free time!
 
  N100/N1 wave: a negative deflection peaking between 90-200 ms that peaks when an novel stimulus occurs and can be matched with previous stimuli 
 
- P200/P2 Wave: positive deflection peaking between 100-250 ms after stimulus N200/N2 Wave: peaks about 200 ms after stimulus presentation. Comprises mismatch negativity (MMN), N2b and N2c N300 
+ P200/P2 Wave: positive deflection peaking between 100-250 ms after stimulus 
+ 
+N200/N2 Wave: peaks about 200 ms after stimulus presentation. Comprises mismatch negativity (MMN), N2b and N2c N300 
 
  P300: has a latency range of 250-400 ms representing attention to an "oddball paradigm" which is a stimulus that differs or occurs less frequently than the standard stimulus 
 
