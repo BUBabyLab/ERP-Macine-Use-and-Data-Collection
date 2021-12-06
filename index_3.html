@@ -1,0 +1,571 @@
+<!doctype html>
+
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>StaircaseJS P&S Contrast</title>
+    <script
+            src="https://code.jquery.com/jquery-2.2.4.js"
+            integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
+            crossorigin="anonymous">
+    </script>
+    <script src="Staircase.js"></script>
+</head>
+
+<body>
+<div id="wrapper" style="background-color:gray;" style="height: 100%;">
+    <div id='test-body'>
+        <section id="StimulusArea">
+            <div id="Canvases" style="width: 512px; margin:auto;" style="background-color:gray;">
+                <p class="tutorial-help" style="color:white;" style="text-align: center; font-size: 1.3em; /
+                    ">Use the arrow keys to indicate which side has a central patch</p>
+                <canvas id="Canvas" class="center" width="512" height="850"></canvas>
+            </div>
+        </section>
+
+        <section id="BlockFeedback">
+            <div id="Feedback" style="text-align: center;">
+                <p id='FeedbackScore'></p>
+            </div>
+            <div id="Graph" style="width: 80%; display: block; margin: auto"></div>
+            <br>
+            <div id='FeedbackButton' class="button">Start Again</div>
+        </section>
+    </div>
+</div>
+
+  <script>
+
+
+     /*
+    StaircaseJS example
+        * Matt Jaquiery - 2017
+        Adapted for Contrast Flanker Staircase (PG)  - 2/10/2021
+    TODO:
+    */
+
+//------------------------------------------------------------------------------
+    // Runtime variables
+    var currentTrialNumber;     //  Will be incremented at start
+    var validTrials;            //  Counter for 'trials'
+    var currentTrial;           //  For the STAIRCASE - do not touch!
+    var myCurrTrl = [];         //  This one is for us!  This will carry current 'trials' info 
+    var currTrlTemp = [];       //  Need to find side
+    var currContrast = -1;      //  Will be updated every trial
+    var currSide = 'left';
+    var trials = [];   
+    var myTrls_0=[];         //  For the STAIRCASE
+    var myTrls_3 = [];          //  Our trials!  (Need one for each flanker dist) 
+    var myTrls_6 = [];
+    var myTrls_15 = [];
+    var myTrls_12 = [];
+    var score;
+    var stair;
+    var trialActive = false;
+    var minContrast = 0;
+    var maxContrast = 36;
+    var currStairInst = 0;   // 0-3; 4 means move on CHANGED TO 0-1 for DEBUG!
+    var currStairTest = 1;	 // 3, 1.5 (15), 6, 12
+    var StairCount = 0;
+    var EOT = 0;  // End of test flag
+    var FlankerSpacing=[]
+    var eccentricity=64
+    var x=100; //ms time
+    var incrementFunction=function(){ setTimeout(incrementFunction,x);
+    }
+    incrementFunction();
+
+
+    ///  Set Up Trials - called next (repeatedly)
+    function Trial(stimulus, targetSide, trialLoop, targContrast, flankerDist) {
+        this.stimulus = stimulus;
+        this.targetSide = targetSide;
+        this.trialLoop = trialLoop;
+        this.targContrast = targContrast;
+        this.flankerDist = flankerDist;
+    };
+
+    //  Set up flanker lambda trials  - 1.5, 3, 6, 12
+
+    for (i = 0; i < 36; i++) { 
+        if (i > 9)
+            myIndex  = `${i}`;
+        else
+            myIndex = '0' + `${i}`;
+        trlStrL = 'img/F3/LeftTarg' + myIndex + 'Contrast_F3.png';
+        myTrls_0.push(new Trial(trlStrL, "left", 0, i, 0));
+
+       trlStrR = 'img/F3/RightTarg' + myIndex + 'Contrast_F3.png';
+       myTrls_0.push(new Trial(trlStrR, "right", 0, i, 0)); 
+
+
+        trlStrL = 'img/F3/LeftTarg' + myIndex + 'Contrast_F3.png';
+	    myTrls_3.push(new Trial(trlStrL, "left", 0, i, 3));
+
+	   trlStrR = 'img/F3/RightTarg' + myIndex + 'Contrast_F3.png';
+       myTrls_3.push(new Trial(trlStrR, "right", 0, i, 3));	
+
+       trlStrL = 'img/F15/LeftTarg' + myIndex + 'Contrast_F15.png';
+       myTrls_15.push(new Trial(trlStrL, "left", 0, i, 15));
+
+       trlStrR = 'img/F15/RightTarg' + myIndex + 'Contrast_F15.png';
+       myTrls_15.push(new Trial(trlStrR, "right", 0, i, 15));   
+
+       trlStrL = 'img/F6/LeftTarg' + myIndex + 'Contrast_F6.png';
+       myTrls_6.push(new Trial(trlStrL, "left", 0, i, 6));
+
+       trlStrR = 'img/F6/RightTarg' + myIndex + 'Contrast_F6.png';
+       myTrls_6.push(new Trial(trlStrR, "right", 0, i, 6));  
+
+       trlStrL = 'img/F12/LeftTarg' + myIndex + 'Contrast_F12.png';
+       myTrls_12.push(new Trial(trlStrL, "left", 0, i, 12));
+
+       trlStrR = 'img/F12/RightTarg' + myIndex + 'Contrast_F12.png';
+       myTrls_12.push(new Trial(trlStrR, "right", 0, i, 12));   
+	}
+
+
+    /* Start Value */
+    theCurrentTrlSet = myTrls_3;
+
+    $(window).load(setupInstructions);
+
+        function setupInstructions() {
+            $(document).on('keyup', function (evt) {
+                keyPress(evt.keyCode);
+            });
+        
+        myWindow = $(window);
+        
+        createStair();
+
+        stair.init(); // Activate the staircase
+
+        startTest();  // Start the experiment
+        }
+
+    function createStair() {
+            stair = new Staircase(  {
+            deltaF: {
+                firstVal: 34, //why is the first value 34 if the max is 36
+                wait : true,
+                down: 3, // down is the number of correct answers required before we increase the difficulty
+                up: 1, // up is the number of incorrect answers before we decrease the difficulty
+                stepSizeDown: 3, // how much we in/decrease by
+                stepSizeUp: 1, // Converge to 80.35% correct ('downUpRatio' and 'down' affect this)
+                limits: [minContrast, maxContrast], // don't allow to go above max or below min (will be 0)
+                direction: -1, // -1 indicates that easier = greater values; 1 would indicate easier = lower values
+                reversalLimit: 3, // How many reversals to do before stopping
+                verbosity: 1, // Enable logging for debugging
+            }
+        });
+    }
+
+    function startTest()  {
+        $('#BlockFeedback').hide();
+        currentTrialNumber = 0;
+        validTrials = 0;
+        score = 0;
+        currContrast = 34; //36?
+        
+        console.log("In the startTest");
+
+        startTrial();
+    }
+
+    /*
+    Each trial consists of painting stimuli and obtaining a response from the participant
+    */
+    function startTrial() {
+        console.log('Starting trial ' + currentTrialNumber + "   Contrast = " + currContrast +  'CurrFlankDist = ' + currStairTest);
+        $('#StimulusArea').show();
+
+        currentTrial = {};
+        playerChoice = -1;  //  Need?
+        drawStimuli();
+    }
+
+    function drawStimuli() {
+
+        // Choose Left or Right version
+        side_check = Math.random() * 2; //why is it  *2?
+        if (side_check > 1) {
+            currSide = 'left';
+        }
+        else currSide = 'right';
+
+        // Meter flanker distance here w. if else stmt
+        currTrlTemp = theCurrentTrlSet.filter(obj => obj.targContrast == currContrast);  //  Pull both at this contrast
+
+        //myCurrTrl = myTrls_3.find( (obj => obj.targContrast == currContrast) && (obj => obj.side == currSide) ;  // currContrast will control stepping
+        myCurrTrl = currTrlTemp.find(obj => obj.targetSide == currSide) ;  // currContrast will control stepping
+        console.log("Current Trial")
+        console.log(myCurrTrl);
+        currentTrial.contrast = currContrast;
+
+        // Prepare canvas
+        var ctx = $('#Canvas')[0].getContext("2d");
+        ctx.clearRect(0,0,ctx.canvas.clientwidth,ctx.canvas.clientheight);
+
+        //var canvas = document.getElementById('my_canvas');
+
+        var image = new Image();
+
+        // Draw stimuli
+        image.onload = function() {
+            ctx.drawImage(image, 0, 0);
+        };
+        image.src = myCurrTrl.stimulus;  // Load name from trial listing
+
+        //console.log(ctx+"> Drew " + currentTrial.stimulus + " in " + (Date.now()-stimDrawTime)+"ms");
+        console.log(ctx+"> Drew " + myCurrTrl.stimulus);
+
+        // Set delay to 500 ms
+        //    console.log('before');
+        //  Needs some attention here!
+        var startTime = performance.now();
+        window.setTimeout(function ()
+            {
+                ctx.fillStyle = 'gray'; 
+                ctx.fillRect(0, 0, 512, 512);
+            }, 100);
+
+        var endTime = performance.now();
+        timeDiff = endTime-startTime;
+        console.log("TimeDiff = " + timeDiff);
+                
+        decisionPhase();
+    }
+
+   function decisionPhase() {
+        trialActive = true;
+    }
+
+    function decisionClick(id) {
+        if(!trialActive)
+            return;
+        trialActive = false;
+        currentTrial.decisionChoice = id;
+        currentTrial.errorCode = 0;
+        nextTrial();
+    }
+
+    function nextTrial() {
+        $('#StimulusArea').hide();
+        processTrialResult();
+        if(currentTrial.errorCode == 0)
+            validTrials++;
+        currentTrialNumber++;
+
+        if(!stair.reversalLimitReached('deltaF'))
+            startTrial();
+        else
+            showBlockFeedback();
+    }
+
+    function processTrialResult() {
+        var oldScore = score;
+
+        console.log(myCurrTrl.targetSide)
+        console.log(currentTrial.decisionChoice)
+
+        currContrast = stair.getLast('deltaF');    // The staircase will decrease/increase this value for you!
+        priors = stair.get('deltaF');
+        console.log("Priors " + priors)
+
+        FlankerSpacing=stair.getLast(); //need to look up value 
+        priors=stair.getLast();
+        console.log("Priors"+priors)
+
+        eccentricity=stair.getLast('64');
+        priors=stair.getLast();
+        console.log("Priors"+priors)
+
+        timing=stair.getLast('100 ms');
+        priors=stair.getLast();
+        console.log("Priors"+priors)
+
+        frequency=stair.getLast()
+        priors=stair.getLast();
+        console.log("Priors"+priors)
+
+        stimulus=stair.getLast()
+        priors=stair.getLast();
+        console.log("Priors"+priors)
+
+        reversalLimit=stair.getLast()
+        priors=stair.getLast();
+        console.log("Priors"+prior)
+
+        TimeDiff=stair.getLast()
+        priors=stair.getLast();
+        console.log("Priors"+prior)
+
+        currStairInst=stair.currStairInsts()
+        priors=stair.getLast();
+        console.log("Priors"+prior)
+
+//create file 
+        import java.io.File;  // Import the File class
+import java.io.IOException;  // Import the IOException class to handle errors
+
+public class CreateFile {
+  public static void main(String[] args) {
+    try {
+      File myObj = new File("filename.txt");
+      if (myObj.createNewFile()) {
+        System.out.println("File created: " + myObj.getName());
+      } else {
+        System.out.println("File already exists.");
+      }
+    } catch (IOException e) {
+      System.out.println("An error occurred.");
+      e.printStackTrace();
+    }
+  }
+}
+//read file 
+import java.io.File;  // Import the File class
+import java.io.FileNotFoundException;  // Import this class to handle errors
+import java.util.Scanner; // Import the Scanner class to read text files
+
+public class ReadFile {
+  public static void main(String[] args) {
+    try {
+      File myObj = new File("filename.txt");
+      Scanner myReader = new Scanner(myObj);
+      while (myReader.hasNextLine()) {
+        String data = myReader.nextLine();
+        System.out.println(data);
+      }
+      myReader.close();
+    } catch (FileNotFoundException e) {
+      System.out.println("An error occurred.");
+      e.printStackTrace();
+    }
+  }
+}
+//write file 
+
+ import java.io.FileWriter;   // Import the FileWriter class
+import java.io.IOException;  // Import the IOException class to handle errors
+
+public class WriteToFile {
+  public static void main(String[] args) {
+    try {
+      FileWriter myWriter = new FileWriter("filename.txt");
+      myWriter.write("Your experiment has been saved");
+      myWriter.close();
+      System.out.println("Successfully wrote to the file.");
+    } catch (IOException e) {
+      System.out.println("An error occurred.");
+      e.printStackTrace();
+    }
+  }
+}
+
+
+
+
+        if ( ((currentTrial.decisionChoice == 0 && myCurrTrl.targetSide == "left") || (currentTrial.decisionChoice == 1 && myCurrTrl.targetSide == "right")) && currentTrial.errorCode == 0) {
+            score++;
+        }
+        if(currentTrial.errorCode==0) {
+            stair.next(oldScore!=score);            // parameter is 'goodAnswer'; true = increase difficulty
+            trials[trials.length] = currentTrial;   // Adding trial to list of completed trials (why not 'push'?)
+            //trials.push(currentTrial);
+        }
+        if (currContrast > maxContrast) {
+            currContrast = maxContrast;
+        }
+        if (currContrast < minContrast) {
+            currContrast = minContrast;
+        }
+    }
+
+    function showBlockFeedback() {
+        $('#Test').hide();
+        $('#BlockFeedback').show();
+        getFeedbackText();
+        makeGraph();
+
+        currStairInst++;  // Just did a stair, so increment
+
+        console.log("currStairInst = " + currStairInst);
+
+        validTrials = 0;
+        currentTrial = 0;
+
+        /* Switch stair? */
+        if (currStairInst == 2) {    /*  CHANGE TO 4 FOR REAL RUN!! DEBUG  */
+            console.log("Here2");
+            console.log("currStairInst NOW HERE 2 = " + currStairInst);
+
+            currStairInst = 0;
+        	switchStair();
+        }
+
+        $('#FeedbackButton').on('click',function (evt) {
+                trials.length = 0;
+                currentTrial.length = 0;
+                stair.length = 0;
+                createStair();
+                stair.init();
+                startTest();
+        });
+
+        console.log("currStairInst 3333 = " + currStairInst);
+    }
+
+    /*  This may have issues! */
+    function switchStair() {
+        console.log("In switchStair");
+
+        if (currStairTest == 1) {
+            currStairTest = 2;
+            theCurrentTrlSet = myTrls_15;
+        }
+        else if (currStairTest == 2) {
+            currStairTest = 3;
+            theCurrentTrlSet = myTrls_6;
+        }
+        else if (currStairTest == 3) {
+            currStairTest = 4;
+            theCurrentTrlSet = myTrls_12;
+        }
+        else EndOfTest();
+    }
+
+    /*  Bail time - save data and quit! */
+    function EndOfTest() {
+        window.close();
+    }
+
+    function keyPress(k) {
+        switch (k) {
+            case 37: // Leftarrow
+                decisionClick(0);
+                break;
+            case 39: // Rightarrow
+                decisionClick(1);
+                break;
+        }
+        return;
+    }
+
+    function getFeedbackText() {
+        $('#FeedbackScore').html("You scored "+score+"/"+(currentTrialNumber+1)+" ("+(Math.round(score/(currentTrialNumber+1)*1000)/10)+"%)<br>Your end level was "+stair.getFinalVal('deltaF')+" contrast");
+    }
+
+    function makeGraph() {
+        var data = [];
+        var cols = ['Trial Number','Difficulty','Calibrated Difficulty'];
+        var finalDiff = stair.getFinalVal('deltaF');
+        for(var i=0;i<trials.length;i++) {
+            data[i] = [i,trials[i].contrast, finalDiff];
+        }
+        data.unshift(cols);
+        drawChart(data, 'Graph');
+    }
+  </script>
+    <style>
+
+        area {
+            cursor: pointer;
+        }
+
+        .game-area {
+            width: 800px;
+            margin: auto;
+        }
+
+        .prompt {
+            font-size: 2em;
+            text-align: center;
+        }
+
+        #FeedbackText {
+            clear: both;
+            font-size: 1.5em;
+            color: white;
+        }
+
+        .decision-img  {
+            cursor: pointer;
+        }
+
+        #ConfidenceTable {
+            width: 100%;
+            border-spacing: 30px;
+            border-collapse: separate;
+        }
+
+        td.confidence {
+            width: 25%;
+            padding: 5px;
+            text-align: center;
+            border: 2px solid black;
+            border-radius: 30px;
+        }
+
+        td.confidence:hover {
+            cursor: pointer;
+        }
+
+        .left {
+            margin-left: 18px;
+        }
+
+        .right {
+            float: right;
+            margin-right: 18px;
+        }
+
+        .button {
+            font-size: 1.5em;
+            font-weight: bold;
+            width: 10em;
+            height: 1.5em;
+            margin: auto;
+            margin-bottom: 0.2em;
+            text-align: center;
+            padding-top: 0.2em;
+            border: 0px solid black;
+            border-radius: 0.4em;
+            box-shadow: 0px 0px 5px 1px black;
+            background-color: #f0f0f0;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            box-shadow: 0px 0px 15px 1px black;
+            background-color: #e0e0e0;
+        }
+
+    </style>
+ 
+
+   
+<!-- Google Charts stuff -->
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+
+      function drawChart(array,divID) {
+        var data = google.visualization.arrayToDataTable(array);
+
+        var options = {
+          legend: { position: 'bottom' },
+          height: 500,
+          width: Math.floor(document.getElementById(divID).getBoundingClientRect().width),
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById(divID));
+
+        chart.draw(data, options);
+      }
+    </script>
+</body>
+</html>
+
