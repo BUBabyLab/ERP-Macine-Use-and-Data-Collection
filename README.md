@@ -21,4 +21,4 @@ N200/N2 Wave: peaks about 200 ms after stimulus presentation. Comprises mismatch
 
  PINV: post imperative negative variation
  
- 
+ This is how information becomes posted to a text file on Github, information in the .md file will be placed in the main user interface 
